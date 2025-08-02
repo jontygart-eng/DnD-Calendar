@@ -20,6 +20,15 @@ const CustomCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(mockCurrentCustomDate.month);
   const [currentYear, setCurrentYear] = useState(mockCurrentCustomDate.year);
   const [selectedDate, setSelectedDate] = useState(null);
+  
+  // Custom current date state (what day is considered "today")
+  const [customCurrentDate, setCustomCurrentDate] = useState(mockCurrentCustomDate);
+  const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+  
+  // Form state for setting custom date
+  const [tempMonth, setTempMonth] = useState(customCurrentDate.month);
+  const [tempDay, setTempDay] = useState(customCurrentDate.day);
+  const [tempYear, setTempYear] = useState(customCurrentDate.year);
 
   // Generate calendar grid for current month
   const calendarDays = useMemo(() => {
