@@ -101,3 +101,162 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Please thoroughly test my Custom Calendar backend API with the following key areas: API Endpoints to Test: 1. GET /api/calendar/current-date - Should return current custom date (creates default if none exists), 2. PUT /api/calendar/current-date - Should update current custom date with validation (month: 0-9, day: 1-30), 3. GET /api/events/{year}/{month} - Should return events for a specific month, 4. POST /api/events - Should create new events with validation, 5. PUT /api/events/{event_id} - Should update existing events, 6. DELETE /api/events/{event_id} - Should delete events, 7. GET /api/events/single/{event_id} - Should get specific event by ID. Important Validation Rules: Months: 0-9 (representing 10 custom months), Days: 1-30 (representing 30 days per month, 3 weeks of 10 days each), Event types: event, special, deadline, today. Test Data Structure: Custom calendar: 10 days per week, 10 months per year, 3 weeks per month (30 days total), Current date should default to month=2, day=15, year=2025 if none exists, Test creating, updating, and deleting events. Error Handling: Invalid month/day ranges, Missing/invalid event data, Non-existent event IDs. Please test all CRUD operations and validation rules thoroughly."
+
+backend:
+  - task: "GET /api/calendar/current-date endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - API correctly returns current custom date and creates default (month=2, day=15, year=2025) if none exists. Response includes all required fields: id, month, day, year, updated_at."
+
+  - task: "PUT /api/calendar/current-date endpoint with validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - API correctly updates current date with valid data and properly validates month (0-9) and day (1-30) ranges. Returns 422 validation errors for invalid inputs."
+
+  - task: "GET /api/events/{year}/{month} endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - API correctly returns events for specified month and validates month range (0-9). Returns proper 400 error for invalid months."
+
+  - task: "POST /api/events endpoint with validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - API correctly creates events with proper validation. Validates month (0-9), day (1-30), and event types (event, special, deadline, today). Returns 422 for invalid data."
+
+  - task: "PUT /api/events/{event_id} endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - API correctly updates existing events and returns 404 for non-existent event IDs. Update functionality works properly with partial data."
+
+  - task: "DELETE /api/events/{event_id} endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - API correctly deletes events and returns proper success message. Returns 404 for non-existent event IDs."
+
+  - task: "GET /api/events/single/{event_id} endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ FAIL - Route conflict issue: /events/single/{event_id} was being matched by /events/{year}/{month} route due to incorrect route ordering in FastAPI."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - FIXED: Reordered routes in server.py to place specific route (/events/single/{event_id}) before generic route (/events/{year}/{month}). Now correctly retrieves events by ID and returns 404 for invalid IDs."
+
+  - task: "MongoDB UUID handling for events"
+    implemented: true
+    working: true
+    file: "/app/backend/services.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ FAIL - Event CRUD operations failing: Events created successfully but could not be retrieved, updated, or deleted by ID due to MongoDB ObjectId vs UUID mismatch."
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - FIXED: Modified services.py to use 'id' field (UUID) instead of '_id' field (ObjectId) for event queries. Fixed create_event to preserve original UUID instead of overwriting with ObjectId string."
+
+  - task: "Custom calendar date structure validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - GET /api/calendar/dates/{year}/{month} correctly returns 30-day calendar structure with custom day names. Validates month range (0-9)."
+
+  - task: "API error handling and validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ PASS - All endpoints properly handle validation errors (422), not found errors (404), and return appropriate error messages. Pydantic validation working correctly."
+
+frontend:
+  - task: "Frontend testing not performed"
+    implemented: "NA"
+    working: "NA"
+    file: "NA"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Frontend testing was not performed as per testing agent instructions to focus only on backend API testing."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "All backend API endpoints tested and working"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "testing"
+      message: "Comprehensive backend API testing completed. All 17 test cases passed after fixing 2 critical issues: 1) FastAPI route ordering conflict for /events/single/{event_id}, 2) MongoDB UUID vs ObjectId handling in event CRUD operations. Custom Calendar API is fully functional with proper validation, error handling, and CRUD operations."
