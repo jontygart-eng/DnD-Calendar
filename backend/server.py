@@ -89,6 +89,18 @@ async def get_dates_for_month(
     }
 
 # Events endpoints
+@api_router.get("/events/single/{event_id}", response_model=EventResponse)
+async def get_event(
+    event_id: str,
+    service: CalendarService = Depends(get_calendar_service)
+):
+    """Get a specific event by ID."""
+    event = await service.get_event_by_id(event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    return EventResponse(**event.dict())
+
 @api_router.get("/events/{year}/{month}", response_model=List[EventResponse])
 async def get_events_for_month(
     year: int,
@@ -138,18 +150,6 @@ async def delete_event(
         raise HTTPException(status_code=404, detail="Event not found")
     
     return {"message": "Event deleted successfully"}
-
-@api_router.get("/events/single/{event_id}", response_model=EventResponse)
-async def get_event(
-    event_id: str,
-    service: CalendarService = Depends(get_calendar_service)
-):
-    """Get a specific event by ID."""
-    event = await service.get_event_by_id(event_id)
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    return EventResponse(**event.dict())
 
 # Utility function for custom day names
 def get_custom_day_name(day_index: int) -> str:
