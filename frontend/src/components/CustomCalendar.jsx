@@ -53,7 +53,7 @@ const CustomCalendar = () => {
     }
     
     return days;
-  }, [currentMonth, currentYear]);
+  }, [currentMonth, currentYear, customCurrentDate]);
 
   const navigateMonth = (direction) => {
     if (direction === 'prev') {
