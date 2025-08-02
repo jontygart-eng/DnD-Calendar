@@ -73,13 +73,13 @@ class CalendarService:
             update_data['updated_at'] = datetime.utcnow()
             
             result = await self.events_collection.find_one_and_update(
-                {"_id": event_id},
+                {"id": event_id},
                 {"$set": update_data},
                 return_document=True
             )
             
             if result:
-                result['id'] = str(result['_id'])
+                result['id'] = str(result['_id']) if 'id' not in result else result['id']
                 return Event(**result)
             return None
         except Exception as e:
@@ -89,7 +89,7 @@ class CalendarService:
     async def delete_event(self, event_id: str) -> bool:
         """Delete an event."""
         try:
-            result = await self.events_collection.delete_one({"_id": event_id})
+            result = await self.events_collection.delete_one({"id": event_id})
             return result.deleted_count > 0
         except Exception as e:
             logger.error(f"Error deleting event {event_id}: {e}")
@@ -98,9 +98,9 @@ class CalendarService:
     async def get_event_by_id(self, event_id: str) -> Optional[Event]:
         """Get a specific event by ID."""
         try:
-            doc = await self.events_collection.find_one({"_id": event_id})
+            doc = await self.events_collection.find_one({"id": event_id})
             if doc:
-                doc['id'] = str(doc['_id'])
+                doc['id'] = str(doc['_id']) if 'id' not in doc else doc['id']
                 return Event(**doc)
             return None
         except Exception as e:
