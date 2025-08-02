@@ -25,8 +25,8 @@ export const CUSTOM_MONTHS = [
   'Challenger'
 ];
 
-// Mock calendar data - each month has 35 days (5 weeks of 10-day cycles)
-export const DAYS_PER_MONTH = 35;
+// Mock calendar data - each month has 30 days (3 weeks of 10-day cycles)
+export const DAYS_PER_MONTH = 30;
 
 // Mock current date in custom calendar
 export const mockCurrentCustomDate = {
