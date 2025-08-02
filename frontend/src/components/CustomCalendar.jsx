@@ -164,6 +164,102 @@ const CustomCalendar = () => {
           </CardHeader>
         </Card>
 
+        {/* Current Date Info & Set Date Button */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Badge variant="secondary" className="px-3 py-1">
+                  Current Date
+                </Badge>
+                <div className="text-lg">
+                  <span className="font-semibold text-slate-800">
+                    {getCustomDayName(customCurrentDate.day - 1)}, {CUSTOM_MONTHS[customCurrentDate.month]} {customCurrentDate.day}, {customCurrentDate.year}
+                  </span>
+                </div>
+              </div>
+              
+              <Dialog open={isDateDialogOpen} onOpenChange={handleDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="flex items-center space-x-2 hover:bg-indigo-50">
+                    <Settings className="h-4 w-4" />
+                    <span>Set Custom Date</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center space-x-2">
+                      <Calendar className="h-5 w-5 text-indigo-600" />
+                      <span>Set Custom Current Date</span>
+                    </DialogTitle>
+                    <DialogDescription>
+                      Set which date should be considered "today" in your custom calendar system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="month-select">Month</Label>
+                      <Select 
+                        value={tempMonth.toString()} 
+                        onValueChange={(value) => setTempMonth(parseInt(value))}
+                      >
+                        <SelectTrigger id="month-select">
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CUSTOM_MONTHS.map((month, index) => (
+                            <SelectItem key={index} value={index.toString()}>
+                              {month}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="day-input">Day (1-{DAYS_PER_MONTH})</Label>
+                      <Input
+                        id="day-input"
+                        type="number"
+                        min="1"
+                        max={DAYS_PER_MONTH}
+                        value={tempDay}
+                        onChange={(e) => setTempDay(parseInt(e.target.value) || 1)}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="year-input">Year</Label>
+                      <Input
+                        id="year-input"
+                        type="number"
+                        min="1"
+                        value={tempYear}
+                        onChange={(e) => setTempYear(parseInt(e.target.value) || 2025)}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end space-x-3 pt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsDateDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSetCustomDate}>
+                        Set Date
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Custom Day Names Header */}
         <Card className="shadow-lg border-0 bg-white/70 backdrop-blur-sm">
           <CardContent className="p-4">
