@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -6,39 +6,114 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { ChevronLeft, ChevronRight, Calendar, Settings } from 'lucide-react';
+import { Textarea } from './ui/textarea';
+import { ChevronLeft, ChevronRight, Calendar, Settings, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
 import { 
   CUSTOM_DAYS, 
   CUSTOM_MONTHS, 
   DAYS_PER_MONTH, 
-  mockCurrentCustomDate, 
-  mockEvents,
   getCustomDayName 
 } from '../data/mock';
+import { calendarApi, eventsApi, handleApiError } from '../services/api';
 
 const CustomCalendar = () => {
-  const [currentMonth, setCurrentMonth] = useState(mockCurrentCustomDate.month);
-  const [currentYear, setCurrentYear] = useState(mockCurrentCustomDate.year);
+  const [currentMonth, setCurrentMonth] = useState(2); // Start with Justin Thyme
+  const [currentYear, setCurrentYear] = useState(2025);
   const [selectedDate, setSelectedDate] = useState(null);
   
-  // Custom current date state (what day is considered "today")
-  const [customCurrentDate, setCustomCurrentDate] = useState(mockCurrentCustomDate);
-  const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+  // API data states
+  const [customCurrentDate, setCustomCurrentDate] = useState({ month: 2, day: 15, year: 2025 });
+  const [events, setEvents] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   
-  // Form state for setting custom date
-  const [tempMonth, setTempMonth] = useState(customCurrentDate.month);
-  const [tempDay, setTempDay] = useState(customCurrentDate.day);
-  const [tempYear, setTempYear] = useState(customCurrentDate.year);
+  // Dialog states
+  const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  
+  // Form states
+  const [tempMonth, setTempMonth] = useState(2);
+  const [tempDay, setTempDay] = useState(15);
+  const [tempYear, setTempYear] = useState(2025);
+  const [eventNote, setEventNote] = useState('');
+  const [eventType, setEventType] = useState('event');
+
+  const { toast } = useToast();
+
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  // Load events when month/year changes
+  useEffect(() => {
+    loadEventsForMonth(currentYear, currentMonth);
+  }, [currentMonth, currentYear]);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load current date
+      const currentDate = await calendarApi.getCurrentDate();
+      setCustomCurrentDate(currentDate);
+      setCurrentMonth(currentDate.month);
+      setCurrentYear(currentDate.year);
+      
+      // Load events for the current month
+      await loadEventsForMonth(currentDate.year, currentDate.month);
+      
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast({
+        title: "Error loading data",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadEventsForMonth = async (year, month) => {
+    try {
+      const monthEvents = await eventsApi.getEventsForMonth(year, month);
+      
+      // Convert events array to object keyed by date
+      const eventsObj = {};
+      monthEvents.forEach(event => {
+        const key = `${event.year}-${event.month}-${event.day}`;
+        eventsObj[key] = event;
+      });
+      
+      setEvents(prevEvents => ({
+        ...prevEvents,
+        [`${year}-${month}`]: eventsObj
+      }));
+      
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast({
+        title: "Error loading events",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
 
   // Generate calendar grid for current month
   const calendarDays = useMemo(() => {
     const days = [];
     const totalDays = DAYS_PER_MONTH;
+    const monthEventsKey = `${currentYear}-${currentMonth}`;
+    const monthEvents = events[monthEventsKey] || {};
     
     for (let day = 1; day <= totalDays; day++) {
       const customDayName = getCustomDayName(day - 1);
       const dateKey = `${currentYear}-${currentMonth}-${day}`;
-      const event = mockEvents[dateKey];
+      const event = monthEvents[dateKey];
       const isToday = currentMonth === customCurrentDate.month && 
                      day === customCurrentDate.day && 
                      currentYear === customCurrentDate.year;
@@ -53,7 +128,7 @@ const CustomCalendar = () => {
     }
     
     return days;
-  }, [currentMonth, currentYear, customCurrentDate]);
+  }, [currentMonth, currentYear, customCurrentDate, events]);
 
   const navigateMonth = (direction) => {
     if (direction === 'prev') {
@@ -77,43 +152,176 @@ const CustomCalendar = () => {
     setSelectedDate(dayData);
   };
 
-  const handleSetCustomDate = () => {
+  const handleSetCustomDate = async () => {
     // Validate the date
     if (tempDay < 1 || tempDay > DAYS_PER_MONTH) {
-      alert(`Day must be between 1 and ${DAYS_PER_MONTH}`);
+      toast({
+        title: "Invalid day",
+        description: `Day must be between 1 and ${DAYS_PER_MONTH}`,
+        variant: "destructive",
+      });
       return;
     }
     
     if (tempYear < 1) {
-      alert('Year must be a positive number');
+      toast({
+        title: "Invalid year",
+        description: 'Year must be a positive number',
+        variant: "destructive",
+      });
       return;
     }
 
-    // Update the custom current date
-    const newCustomDate = {
-      month: tempMonth,
-      day: tempDay,
-      year: tempYear
-    };
-    
-    setCustomCurrentDate(newCustomDate);
-    
-    // Navigate to the month containing the new current date
-    setCurrentMonth(tempMonth);
-    setCurrentYear(tempYear);
-    
-    setIsDateDialogOpen(false);
+    try {
+      setSaving(true);
+      const newCustomDate = {
+        month: tempMonth,
+        day: tempDay,
+        year: tempYear
+      };
+      
+      const updatedDate = await calendarApi.setCurrentDate(newCustomDate);
+      setCustomCurrentDate(updatedDate);
+      
+      // Navigate to the month containing the new current date
+      setCurrentMonth(tempMonth);
+      setCurrentYear(tempYear);
+      
+      setIsDateDialogOpen(false);
+      
+      toast({
+        title: "Date updated",
+        description: "Custom current date has been set successfully",
+      });
+      
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast({
+        title: "Error setting date",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDialogOpen = (open) => {
     setIsDateDialogOpen(open);
     if (open) {
-      // Reset temp values to current custom date when opening
       setTempMonth(customCurrentDate.month);
       setTempDay(customCurrentDate.day);
       setTempYear(customCurrentDate.year);
     }
   };
+
+  const handleEventDialogOpen = (open, dayData = null, event = null) => {
+    setIsEventDialogOpen(open);
+    if (open && dayData) {
+      setSelectedDate(dayData);
+      if (event) {
+        setEditingEvent(event);
+        setEventNote(event.note);
+        setEventType(event.type);
+      } else {
+        setEditingEvent(null);
+        setEventNote('');
+        setEventType('event');
+      }
+    } else {
+      setEditingEvent(null);
+      setEventNote('');
+      setEventType('event');
+    }
+  };
+
+  const handleSaveEvent = async () => {
+    if (!eventNote.trim()) {
+      toast({
+        title: "Invalid event",
+        description: "Event note cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      const eventData = {
+        year: currentYear,
+        month: currentMonth,
+        day: selectedDate.day,
+        note: eventNote.trim(),
+        type: eventType
+      };
+
+      if (editingEvent) {
+        // Update existing event
+        await eventsApi.updateEvent(editingEvent.id, { 
+          note: eventNote.trim(), 
+          type: eventType 
+        });
+      } else {
+        // Create new event
+        await eventsApi.createEvent(eventData);
+      }
+
+      // Reload events for current month
+      await loadEventsForMonth(currentYear, currentMonth);
+      
+      setIsEventDialogOpen(false);
+      
+      toast({
+        title: editingEvent ? "Event updated" : "Event created",
+        description: "Event has been saved successfully",
+      });
+      
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast({
+        title: "Error saving event",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteEvent = async (event) => {
+    try {
+      setSaving(true);
+      await eventsApi.deleteEvent(event.id);
+      await loadEventsForMonth(currentYear, currentMonth);
+      
+      toast({
+        title: "Event deleted",
+        description: "Event has been removed successfully",
+      });
+      
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      toast({
+        title: "Error deleting event",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex items-center space-x-3">
+          <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+          <span className="text-lg text-slate-600">Loading your custom calendar...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4">
@@ -246,11 +454,12 @@ const CustomCalendar = () => {
                       <Button 
                         variant="outline" 
                         onClick={() => setIsDateDialogOpen(false)}
+                        disabled={saving}
                       >
                         Cancel
                       </Button>
-                      <Button onClick={handleSetCustomDate}>
-                        Set Date
+                      <Button onClick={handleSetCustomDate} disabled={saving}>
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Set Date"}
                       </Button>
                     </div>
                   </div>
@@ -318,13 +527,25 @@ const CustomCalendar = () => {
         {selectedDate && (
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-3">
-                <Badge variant="secondary" className="text-sm">
-                  Day {selectedDate.day}
-                </Badge>
-                <span className="text-xl text-slate-800">
-                  {selectedDate.customDayName}
-                </span>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Badge variant="secondary" className="text-sm">
+                    Day {selectedDate.day}
+                  </Badge>
+                  <span className="text-xl text-slate-800">
+                    {selectedDate.customDayName}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleEventDialogOpen(true, selectedDate)}
+                    className="flex items-center space-x-1"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add Event</span>
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -334,9 +555,34 @@ const CustomCalendar = () => {
                 </p>
                 {selectedDate.event ? (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-amber-800 font-medium">
-                      📝 {selectedDate.event.note}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-amber-800 font-medium">
+                          {selectedDate.event.note}
+                        </p>
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          {selectedDate.event.type}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEventDialogOpen(true, selectedDate, selectedDate.event)}
+                          disabled={saving}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteEvent(selectedDate.event)}
+                          disabled={saving}
+                        >
+                          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-slate-500 italic">No events for this day</p>
@@ -345,6 +591,62 @@ const CustomCalendar = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Event Dialog */}
+        <Dialog open={isEventDialogOpen} onOpenChange={handleEventDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Plus className="h-5 w-5 text-indigo-600" />
+                <span>{editingEvent ? 'Edit Event' : 'Add New Event'}</span>
+              </DialogTitle>
+              <DialogDescription>
+                {selectedDate && `Add an event for ${selectedDate.customDayName}, ${CUSTOM_MONTHS[currentMonth]} ${selectedDate.day}`}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="event-note">Event Note</Label>
+                <Textarea
+                  id="event-note"
+                  placeholder="Enter event details..."
+                  value={eventNote}
+                  onChange={(e) => setEventNote(e.target.value)}
+                  className="w-full"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="event-type">Event Type</Label>
+                <Select value={eventType} onValueChange={setEventType}>
+                  <SelectTrigger id="event-type">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="event">Event</SelectItem>
+                    <SelectItem value="special">Special</SelectItem>
+                    <SelectItem value="deadline">Deadline</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEventDialogOpen(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEvent} disabled={saving || !eventNote.trim()}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (editingEvent ? "Update" : "Create")}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
       </div>
     </div>
