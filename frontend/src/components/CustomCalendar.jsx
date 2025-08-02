@@ -77,6 +77,44 @@ const CustomCalendar = () => {
     setSelectedDate(dayData);
   };
 
+  const handleSetCustomDate = () => {
+    // Validate the date
+    if (tempDay < 1 || tempDay > DAYS_PER_MONTH) {
+      alert(`Day must be between 1 and ${DAYS_PER_MONTH}`);
+      return;
+    }
+    
+    if (tempYear < 1) {
+      alert('Year must be a positive number');
+      return;
+    }
+
+    // Update the custom current date
+    const newCustomDate = {
+      month: tempMonth,
+      day: tempDay,
+      year: tempYear
+    };
+    
+    setCustomCurrentDate(newCustomDate);
+    
+    // Navigate to the month containing the new current date
+    setCurrentMonth(tempMonth);
+    setCurrentYear(tempYear);
+    
+    setIsDateDialogOpen(false);
+  };
+
+  const handleDialogOpen = (open) => {
+    setIsDateDialogOpen(open);
+    if (open) {
+      // Reset temp values to current custom date when opening
+      setTempMonth(customCurrentDate.month);
+      setTempDay(customCurrentDate.day);
+      setTempYear(customCurrentDate.year);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
