@@ -56,8 +56,11 @@ class CalendarService:
         """Create a new event."""
         try:
             event = Event(**event_data.dict())
+            # Store the original UUID before insertion
+            original_id = event.id
             result = await self.events_collection.insert_one(event.dict())
-            event.id = str(result.inserted_id)
+            # Keep the original UUID as the event ID, not the ObjectId
+            event.id = original_id
             return event
         except Exception as e:
             logger.error(f"Error creating event: {e}")
