@@ -31,14 +31,14 @@ export const DAYS_PER_MONTH = 30;
 // Mock current date in custom calendar
 export const mockCurrentCustomDate = {
   month: 2, // Justin Thyme (0-indexed)
-  day: 18,   // Day 18 of the month
+  day: 15,   // Day 15 of the month (middle of month)
   year: 2025
 };
 
 // Mock events/tracking data
 export const mockEvents = {
-  '2025-2-15': { note: 'Important meeting', type: 'event' },
-  '2025-2-18': { note: 'Today!', type: 'today' },
+  '2025-2-12': { note: 'Important meeting', type: 'event' },
+  '2025-2-15': { note: 'Today!', type: 'today' },
   '2025-2-22': { note: 'Birthday celebration', type: 'special' },
   '2025-3-5': { note: 'Project deadline', type: 'deadline' }
 };
