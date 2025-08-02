@@ -48,7 +48,7 @@ export const getCustomDayName = (dayNumber) => {
   return CUSTOM_DAYS[dayNumber % 10];
 };
 
-// Utility function to get days in a month (all months have 35 days in this system)
+// Utility function to get days in a month (all months have 30 days - 3 weeks of 10 days each)
 export const getDaysInMonth = () => DAYS_PER_MONTH;
 
 // Convert standard date to custom calendar (mock implementation)
