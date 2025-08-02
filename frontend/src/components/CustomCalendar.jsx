@@ -39,9 +39,9 @@ const CustomCalendar = () => {
       const customDayName = getCustomDayName(day - 1);
       const dateKey = `${currentYear}-${currentMonth}-${day}`;
       const event = mockEvents[dateKey];
-      const isToday = currentMonth === mockCurrentCustomDate.month && 
-                     day === mockCurrentCustomDate.day && 
-                     currentYear === mockCurrentCustomDate.year;
+      const isToday = currentMonth === customCurrentDate.month && 
+                     day === customCurrentDate.day && 
+                     currentYear === customCurrentDate.year;
       
       days.push({
         day,
