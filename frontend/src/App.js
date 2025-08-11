@@ -2,8 +2,12 @@ import React, { Suspense } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Lazy load the main calendar component for faster initial load
+// Check if we're in development or production
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// Lazy load components
 const CustomCalendar = React.lazy(() => import("./components/CustomCalendar"));
+const StaticCustomCalendar = React.lazy(() => import("./components/StaticCustomCalendar"));
 
 // Minimal loading component
 const LoadingSpinner = () => (
@@ -26,12 +30,15 @@ const LoadingSpinner = () => (
 );
 
 function App() {
+  // Use static version for production (GitHub Pages), full version for development
+  const CalendarComponent = isDevelopment ? CustomCalendar : StaticCustomCalendar;
+
   return (
     <div className="App">
-      <BrowserRouter>
+      <BrowserRouter basename={process.env.PUBLIC_URL || ""}>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            <Route path="/" element={<CustomCalendar />} />
+            <Route path="/" element={<CalendarComponent />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
