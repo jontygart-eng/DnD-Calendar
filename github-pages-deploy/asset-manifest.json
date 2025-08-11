@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/DnD-Calendar/static/css/main.6733ef35.css",
+    "main.js": "/DnD-Calendar/static/js/main.20f92658.js",
+    "static/js/259.7a3ea78b.chunk.js": "/DnD-Calendar/static/js/259.7a3ea78b.chunk.js",
+    "static/js/514.ddca19f4.chunk.js": "/DnD-Calendar/static/js/514.ddca19f4.chunk.js",
+    "static/js/980.9043c939.chunk.js": "/DnD-Calendar/static/js/980.9043c939.chunk.js",
+    "static/js/738.7baf94c8.chunk.js": "/DnD-Calendar/static/js/738.7baf94c8.chunk.js",
+    "index.html": "/DnD-Calendar/index.html",
+    "main.6733ef35.css.map": "/DnD-Calendar/static/css/main.6733ef35.css.map",
+    "main.20f92658.js.map": "/DnD-Calendar/static/js/main.20f92658.js.map",
+    "259.7a3ea78b.chunk.js.map": "/DnD-Calendar/static/js/259.7a3ea78b.chunk.js.map",
+    "514.ddca19f4.chunk.js.map": "/DnD-Calendar/static/js/514.ddca19f4.chunk.js.map",
+    "980.9043c939.chunk.js.map": "/DnD-Calendar/static/js/980.9043c939.chunk.js.map",
+    "738.7baf94c8.chunk.js.map": "/DnD-Calendar/static/js/738.7baf94c8.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6733ef35.css",
+    "static/js/main.20f92658.js"
+  ]
+}
