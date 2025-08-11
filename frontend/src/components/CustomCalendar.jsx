@@ -61,22 +61,18 @@ const CustomCalendar = () => {
     loadEventsForMonth(currentYear, currentMonth);
   }, [currentMonth, currentYear]);
 
-  const loadInitialData = async () => {
+  // Optimized data loading with useCallback
+  const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Load current date
       const currentDate = await calendarApi.getCurrentDate();
       setCustomCurrentDate(currentDate);
       setCurrentMonth(currentDate.month);
       setCurrentYear(currentDate.year);
-      
-      // Load events for the current month
       await loadEventsForMonth(currentDate.year, currentDate.month);
-      
     } catch (error) {
       const errorMessage = handleApiError(error);
-      toast({
+      toast?.({
         title: "Error loading data",
         description: errorMessage,
         variant: "destructive",
@@ -84,13 +80,11 @@ const CustomCalendar = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const loadEventsForMonth = async (year, month) => {
+  const loadEventsForMonth = useCallback(async (year, month) => {
     try {
       const monthEvents = await eventsApi.getEventsForMonth(year, month);
-      
-      // Convert events array to object keyed by date
       const eventsObj = {};
       monthEvents.forEach(event => {
         const key = `${event.year}-${event.month}-${event.day}`;
@@ -101,16 +95,15 @@ const CustomCalendar = () => {
         ...prevEvents,
         [`${year}-${month}`]: eventsObj
       }));
-      
     } catch (error) {
       const errorMessage = handleApiError(error);
-      toast({
+      toast?.({
         title: "Error loading events",
         description: errorMessage,
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
   // Generate calendar grid for current month
   const calendarDays = useMemo(() => {
