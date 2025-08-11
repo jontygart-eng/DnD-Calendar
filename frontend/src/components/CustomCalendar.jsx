@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -9,13 +9,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { ChevronLeft, ChevronRight, Calendar, Settings, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import { 
-  CUSTOM_DAYS, 
-  CUSTOM_MONTHS, 
-  DAYS_PER_MONTH, 
-  getCustomDayName 
-} from '../data/mock';
 import { calendarApi, eventsApi, handleApiError } from '../services/api';
+
+// Constants moved inline to reduce bundle size
+const CUSTOM_DAYS = [
+  'Peppermint Patty Day', 'Bing Bong Day', 'Wednesday', 'Chewsday', 'Mustang Day',
+  'Second Wednesday', 'Skip Day', 'Second Chewsday', 'Sabbath', 'Loin Cloth Day'
+];
+
+const CUSTOM_MONTHS = [
+  'Revan', 'Juno', 'Justin Thyme', 'Plato', 'Olivia Newton John',
+  'Palmetto', 'Juice Daddy', 'Retrograde', 'Blizzrock', 'Challenger'
+];
+
+const DAYS_PER_MONTH = 30;
+
+const getCustomDayName = (dayIndex) => CUSTOM_DAYS[dayIndex % 10];
 
 const CustomCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(2); // Start with Justin Thyme
