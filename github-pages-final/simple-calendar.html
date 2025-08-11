@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom D&D Calendar Tracker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #e0e7ff 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .header p { color: #64748b; font-size: 1.1rem; }
+        .calendar-container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-bottom: 2rem;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .nav-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #4f46e5; transform: scale(1.1); }
+        .month-year {
+            text-align: center;
+        }
+        .month-year h2 {
+            font-size: 2rem;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        .month-year p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+        .day-names {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+        }
+        .day-name {
+            text-align: center;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.85rem;
+            padding: 0.5rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0.5rem;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            position: relative;
+        }
+        .calendar-day:hover {
+            border-color: #6366f1;
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        .calendar-day.today {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-color: #4f46e5;
+        }
+        .calendar-day.selected {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 2px #f59e0b;
+        }
+        .day-number {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        .day-label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            text-align: center;
+        }
+        .current-info {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .current-date {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .event-info {
+            padding: 1rem;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .instructions h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+        .instructions li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .instructions li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        @media (max-width: 768px) {
+            .calendar-grid { grid-template-columns: repeat(5, 1fr); }
+            .header h1 { font-size: 2rem; }
+            .day-names { grid-template-columns: repeat(5, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 Custom D&D Calendar Tracker</h1>
+            <p>Track your campaign days in the unique 10-day week system</p>
+        </div>
+
+        <div class="current-info">
+            <div class="current-date">
+                <span class="badge">Current Date</span>
+                <span id="current-date-display">Loin Cloth Day, Palmetto 20, 2025</span>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button class="nav-btn" onclick="previousMonth()">‹</button>
+                <div class="month-year">
+                    <h2 id="month-name">Palmetto</h2>
+                    <p id="year-display">2025</p>
+                </div>
+                <button class="nav-btn" onclick="nextMonth()">›</button>
+            </div>
+
+            <div class="day-names">
+                <div class="day-name">Peppermint Patty Day</div>
+                <div class="day-name">Bing Bong Day</div>
+                <div class="day-name">Wednesday</div>
+                <div class="day-name">Chewsday</div>
+                <div class="day-name">Mustang Day</div>
+            </div>
+            <div class="day-names">
+                <div class="day-name">Second Wednesday</div>
+                <div class="day-name">Skip Day</div>
+                <div class="day-name">Second Chewsday</div>
+                <div class="day-name">Sabbath</div>
+                <div class="day-name">Loin Cloth Day</div>
+            </div>
+
+            <div class="calendar-grid" id="calendar-grid">
+                <!-- Calendar days will be generated here -->
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>🌟 Your Custom Calendar Features:</h3>
+            <ul>
+                <li><strong>10 Unique Day Names:</strong> From Peppermint Patty Day to Loin Cloth Day</li>
+                <li><strong>10 Custom Months:</strong> Revan, Juno, Justin Thyme, Plato, Olivia Newton John, Palmetto, Juice Daddy, Retrograde, Blizzrock, Challenger</li>
+                <li><strong>3 Weeks per Month:</strong> 30 days total (10 days × 3 weeks)</li>
+                <li><strong>Perfect for D&D:</strong> Create immersive campaign timelines</li>
+                <li><strong>Click Days:</strong> Select any day to highlight it</li>
+                <li><strong>Navigate Months:</strong> Use arrow buttons to explore</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Custom calendar data
+        const CUSTOM_DAYS = [
+            'Peppermint Patty Day', 'Bing Bong Day', 'Wednesday', 'Chewsday', 'Mustang Day',
+            'Second Wednesday', 'Skip Day', 'Second Chewsday', 'Sabbath', 'Loin Cloth Day'
+        ];
+
+        const CUSTOM_MONTHS = [
+            'Revan', 'Juno', 'Justin Thyme', 'Plato', 'Olivia Newton John',
+            'Palmetto', 'Juice Daddy', 'Retrograde', 'Blizzrock', 'Challenger'
+        ];
+
+        let currentMonth = 5; // Palmetto
+        let currentYear = 2025;
+        let selectedDay = null;
+        let currentDate = { month: 5, day: 20, year: 2025 }; // Loin Cloth Day
+
+        function getCustomDayName(dayIndex) {
+            return CUSTOM_DAYS[dayIndex % 10];
+        }
+
+        function updateDisplay() {
+            document.getElementById('month-name').textContent = CUSTOM_MONTHS[currentMonth];
+            document.getElementById('year-display').textContent = currentYear;
+            
+            const currentDayName = getCustomDayName(currentDate.day - 1);
+            document.getElementById('current-date-display').textContent = 
+                `${currentDayName}, ${CUSTOM_MONTHS[currentDate.month]} ${currentDate.day}, ${currentDate.year}`;
+        }
+
+        function generateCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            for (let day = 1; day <= 30; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.onclick = () => selectDay(day);
+
+                const isToday = currentMonth === currentDate.month && 
+                               day === currentDate.day && 
+                               currentYear === currentDate.year;
+                
+                if (isToday) {
+                    dayEl.classList.add('today');
+                }
+
+                if (selectedDay === day) {
+                    dayEl.classList.add('selected');
+                }
+
+                const dayName = getCustomDayName(day - 1);
+                dayEl.innerHTML = `
+                    <div class="day-number">${day}</div>
+                    <div class="day-label">${dayName.split(' ')[0]}</div>
+                `;
+
+                grid.appendChild(dayEl);
+            }
+        }
+
+        function selectDay(day) {
+            selectedDay = day;
+            generateCalendar();
+            
+            const dayName = getCustomDayName(day - 1);
+            const info = document.querySelector('.event-info');
+            if (info) {
+                info.remove();
+            }
+            
+            const eventInfo = document.createElement('div');
+            eventInfo.className = 'event-info';
+            eventInfo.innerHTML = `
+                <strong>Selected:</strong> ${dayName}, ${CUSTOM_MONTHS[currentMonth]} ${day}, ${currentYear}
+                <br><em>Perfect day for a D&D adventure!</em>
+            `;
+            document.querySelector('.current-info').appendChild(eventInfo);
+        }
+
+        function previousMonth() {
+            if (currentMonth === 0) {
+                currentMonth = CUSTOM_MONTHS.length - 1;
+                currentYear--;
+            } else {
+                currentMonth--;
+            }
+            selectedDay = null;
+            updateDisplay();
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            if (currentMonth === CUSTOM_MONTHS.length - 1) {
+                currentMonth = 0;
+                currentYear++;
+            } else {
+                currentMonth++;
+            }
+            selectedDay = null;
+            updateDisplay();
+            generateCalendar();
+        }
+
+        // Initialize calendar
+        updateDisplay();
+        generateCalendar();
+    </script>
+</body>
+</html>
